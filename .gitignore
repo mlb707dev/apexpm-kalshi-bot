@@ -1,0 +1,21 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*private*key*
+
+# Runtime data
+*.db
+*.sqlite
+*.log
+__pycache__/
+*.pyc
+
+# Dashboard build
+node_modules/
+dist/
+
+.DS_Store
+.claude/
