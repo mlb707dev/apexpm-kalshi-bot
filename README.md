@@ -6,6 +6,10 @@ I built this end to end with Claude as my pair programmer. The aim was to see ho
 
 > ⚠️ **Paper trading by default. Not financial advice.** `DRY_RUN=true` and `USE_DEMO=true` are the shipped defaults. The strategy values in this repo are deliberately conservative placeholders, not tuned values.
 
+## Status
+
+This public repo is **V2**: the architecture, strategy set and safeguards described below, kept as a readable reference. Active development continues in a private **V3** that is currently in paper validation against live Kalshi orderbooks (real fills, slippage and fees recorded, no real orders). V3 adds a persisted risk governor (daily / weekly / monthly loss caps, profit lock, drawdown-scaled sizing, per-strategy loss streaks), a regime detector that throttles or pauses strategies when market conditions change, portfolio-aware Kelly sizing, a plain-language activity feed, and a phone-first control dashboard with a kill switch. This repo receives security fixes only. Nothing here is a tuned, profitable configuration, and no live-money results are claimed.
+
 ---
 
 ## What it does
