@@ -575,8 +575,6 @@ export default function ApexPM(){
   const [activeSt,setActiveSt]   = useState(Object.fromEntries(STRATEGIES.map(s=>[s.id,s.id!=="niche"])));
   const [scanFilter,setScanFilter]=useState("all");
   /* api config */
-  const [kalshiKey,setKalshiKey] = useState("");
-  const [kalshiSecret,setKalshiSecret]=useState("");
   const [apiSaved,setApiSaved]   = useState(false);
   const [liveMode,setLiveMode]   = useState(false);
   const [liveConfirm,setLiveConfirm]=useState(false); // confirmation step
@@ -1647,32 +1645,16 @@ ACTIVE STRATEGIES: ${Object.entries(activeSt).filter(([,v])=>v).map(([k])=>k).jo
       {/* API Key form */}
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:16,marginBottom:16}}>
         <div style={{color:C.text,fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",marginBottom:12}}>Kalshi API Credentials</div>
-        <Input
-          label="API Key ID"
-          value={kalshiKey}
-          onChange={setKalshiKey}
-          placeholder="e.g. 3f8a2b1c-..."
-          hint="Found in Kalshi → Settings → API Keys → Create Key"
-        />
-        <Input
-          label="API Secret / Private Key"
-          value={kalshiSecret}
-          onChange={setKalshiSecret}
-          type="password"
-          placeholder="Paste your RSA private key or HMAC secret"
-          hint="Kept in memory for this tab only — never saved to disk or browser storage. Re-enter after a reload."
-        />
+        {/* SECURITY: no credential inputs in the browser. Keys live only in the bot's host env vars. */}
+        <div style={{color:C.dim,fontSize:12,lineHeight:1.6,marginBottom:12}}>
+          Kalshi keys are set <b>only</b> in the bot's server environment (e.g. Render/Railway variables),
+          never typed into this page.
+        </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <Btn onClick={()=>{
-            if(kalshiKey&&kalshiSecret){
-              // Held in memory for this tab only — never written to storage.
-              setApiSaved(true);
-            }
-          }} color={C.teal} fill disabled={!kalshiKey||!kalshiSecret}>
-            Use for This Session
+          <Btn onClick={()=>setApiSaved(v=>!v)} color={C.teal} fill={!apiSaved}>
+            {apiSaved ? "Unmark" : "I've set my keys on the server"}
           </Btn>
-          {apiSaved&&<Badge color={C.green}>✓ Loaded for this session</Badge>}
-          {!apiSaved&&(kalshiKey||kalshiSecret)&&<Badge color={C.amber} tiny>Not loaded</Badge>}
+          {apiSaved&&<Badge color={C.green}>✓ Marked as configured</Badge>}
         </div>
       </div>
 
@@ -1685,7 +1667,7 @@ ACTIVE STRATEGIES: ${Object.entries(activeSt).filter(([,v])=>v).map(([k])=>k).jo
           {step:"3",text:"Click 'Create New Key' — give it a name like 'ApexPM Bot'"},
           {step:"4",text:"Set permissions: Read + Trade (both required for live execution)"},
           {step:"5",text:"Copy your Key ID and download the private key file"},
-          {step:"6",text:"Paste both above and click Use for This Session"},
+          {step:"6",text:"Add them to the bot server's environment variables (never paste keys into this page)"},
         ].map(s=>(
           <div key={s.step} style={{display:"flex",gap:10,padding:"7px 0",borderBottom:`1px solid ${C.border}18`}}>
             <div style={{width:20,height:20,borderRadius:10,background:`${C.teal}20`,color:C.teal,

@@ -52,7 +52,8 @@ Risk controls come first. The strategies come second.
 - **Hard caps.** Per-trade dollar and contract caps until the bankroll clears a safe balance, a max number of concurrent positions, and a max share of the balance per event.
 - **Liquidity filters.** Minimum 24h volume and maximum bid-ask spread for every leg, so "edge" isn't just an illiquid quote.
 - **Stop-loss cooldown.** Stop-losses don't fire during the entry-spread noise right after a fill.
-- **Credentials never touch disk in the dashboard.** API keys live in memory for that browser tab only. The bot reads them from environment variables.
+- **The dashboard never handles credentials.** Keys live only in the bot's server environment variables, and logs are kept free of key material.
+- **Exits are sells, never buys.** Exit orders are `sell` + `reduce_only`, so an exit can never add to or flip a position.
 
 ## Quick start
 

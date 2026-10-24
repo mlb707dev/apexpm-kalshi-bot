@@ -63,6 +63,7 @@ def _i(name, default): return int(os.getenv(name, default))
 # Sizing & risk
 KELLY_FRACTION   = _f("KELLY_FRACTION", "0.25")    # fractional Kelly (full Kelly is too aggressive)
 MAX_POS_PCT      = _f("MAX_POS_PCT", "0.05")       # max share of bankroll per position
+_MAX_POS_PCT_CAP = MAX_POS_PCT                     # ceiling; auto-adjust may only go below
 MAX_TRADE_USD    = _f("MAX_TRADE_USD", "10")       # hard cap per trade while balance < SAFE_BALANCE
 MAX_CONTRACTS    = _i("MAX_CONTRACTS", "25")       # hard cap contracts per order while balance < SAFE_BALANCE
 SAFE_BALANCE     = _f("SAFE_BALANCE", str(BANKROLL))  # above this, normal Kelly sizing resumes
@@ -505,13 +506,11 @@ class KalshiAuth:
         import re, base64 as b64
         pem = private_key_pem.strip()
         b64_key = os.getenv("KALSHI_PRIVATE_KEY_B64", "")
-        log.info(f"Auth: key_id={key_id[:8]}... b64_key_len={len(b64_key)} pem_len={len(pem)}")
         if b64_key:
             try:
                 pem = b64.b64decode(b64_key).decode("utf-8")
-                log.info(f"B64 decoded OK, pem starts: {pem[:40]}")
-            except Exception as e:
-                log.error(f"B64 decode failed: {e}")
+            except Exception:
+                log.error("KALSHI_PRIVATE_KEY_B64 is not valid base64")  # never log key material
         if "\\n" in pem:
             pem = pem.replace("\\n", "\n")
         if "\n" not in pem:
@@ -524,16 +523,15 @@ class KalshiAuth:
         try:
             self.private_key = serialization.load_pem_private_key(pem.encode("utf-8"), password=None)
             log.info("Private key loaded successfully")
-        except Exception as e:
-            log.error(f"Key load failed: {e}")
-            raise
+        except Exception:
+            log.error("Private key could not be parsed (contents not logged)")
+            raise RuntimeError("Kalshi private key could not be parsed") from None
 
     def sign(self, method: str, path: str) -> dict:
         """Generate signed headers - exactly per Kalshi API docs."""
         ts_ms = str(int(time.time() * 1000))
         path_clean = path.split("?")[0]
         msg_string = ts_ms + method.upper() + path_clean
-        log.info(f"Signing: ts={ts_ms} method={method.upper()} path={path_clean}")
         signature = self.private_key.sign(
             msg_string.encode("utf-8"),
             padding.PSS(
@@ -543,7 +541,6 @@ class KalshiAuth:
             hashes.SHA256()
         )
         sig_b64 = base64.b64encode(signature).decode("utf-8")
-        log.info(f"Signature (first 20): {sig_b64[:20]}...")
         return {
             "KALSHI-ACCESS-KEY":       self.key_id,
             "KALSHI-ACCESS-TIMESTAMP": ts_ms,
@@ -563,14 +560,14 @@ class KalshiClient:
     def __init__(self, auth: KalshiAuth):
         self.auth    = auth
         self.session = requests.Session()
-        self.session.timeout = 10
+        self.timeout = 10   # requests ignores session.timeout; pass timeout on every call
 
     def _get(self, path: str, params: dict = None) -> Optional[dict]:
         url      = BASE_URL + path
         sign_path = "/trade-api/v2" + path
         headers  = self.auth.sign("GET", sign_path)
         try:
-            r = self.session.get(url, headers=headers, params=params)
+            r = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             r.raise_for_status()
             return r.json()
         except Exception as e:
@@ -583,7 +580,7 @@ class KalshiClient:
         headers  = self.auth.sign("POST", sign_path)
         try:
             log.info(f"POST {path} body={json.dumps(body)}")
-            r = self.session.post(url, headers=headers, json=body)
+            r = self.session.post(url, headers=headers, json=body, timeout=self.timeout)
             if not r.ok:
                 log.error(f"POST {path} -> {r.status_code} {r.text[:300]}")
             r.raise_for_status()
@@ -742,7 +739,8 @@ class KalshiClient:
         return data.get("market_positions", []) if data else []
 
     def place_order(self, ticker: str, side: str, count: int,
-                    price_cents: int, order_type: str = "limit") -> Optional[dict]:
+                    price_cents: int, order_type: str = "limit",
+                    action: str = "buy") -> Optional[dict]:
         """
         Place an order on Kalshi.
         side: "yes" or "no"
@@ -755,9 +753,10 @@ class KalshiClient:
             return {"status": "dry_run", "ticker": ticker, "side": side,
                     "count": count, "price": price_cents}
 
+        assert action in ("buy", "sell")
         body = {
             "ticker":    ticker,
-            "action":    "buy",
+            "action":    action,
             "side":      side,
             "count":     count,
             "type":      order_type,
@@ -765,6 +764,8 @@ class KalshiClient:
         if order_type == "limit":
             body["yes_price" if side == "yes" else "no_price"] = price_cents
             body["time_in_force"] = "immediate_or_cancel"
+        if action == "sell":
+            body["reduce_only"] = True   # an exit can never open a new position
 
         result = self._post("/portfolio/orders", body)
         if result:
@@ -891,12 +892,11 @@ def update_position_sizing():
         profit_factor = gross_wins / gross_losses if gross_losses > 0 else 0
 
         old_pct = MAX_POS_PCT
-        if win_rate > 0.60 and profit_factor > 1.3:
-            MAX_POS_PCT = 0.15
-        elif win_rate < 0.50:
-            MAX_POS_PCT = 0.05
+        # Never raise size above the configured cap; only shrink after poor results.
+        if win_rate < 0.50:
+            MAX_POS_PCT = min(_MAX_POS_PCT_CAP, 0.5 * _MAX_POS_PCT_CAP)
         else:
-            MAX_POS_PCT = 0.10
+            MAX_POS_PCT = _MAX_POS_PCT_CAP
 
         if MAX_POS_PCT != old_pct:
             log.info(f"[COMPOUNDING] Adjusted MAX_POS_PCT: {old_pct*100:.0f}% -> {MAX_POS_PCT*100:.0f}% "
@@ -980,7 +980,7 @@ def check_and_exit_positions(client):
 
         # FIRE ORDER FIRST — then log
         if not DRY_RUN:
-            result = client.place_order(ticker, side, contracts, bid)
+            result = client.place_order(ticker, side, contracts, bid, action="sell")
             if not result:
                 continue  # failed, retry next scan
         else:
@@ -2699,7 +2699,7 @@ class KalshiWebSocket:
 
         # FIRE ORDER FIRST
         if not DRY_RUN:
-            result = self.client.place_order(ticker, side, contracts, bid)
+            result = self.client.place_order(ticker, side, contracts, bid, action="sell")
             if not result:
                 return
         else:

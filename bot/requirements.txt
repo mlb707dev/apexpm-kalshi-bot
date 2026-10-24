@@ -1,5 +1,5 @@
-requests==2.32.3
-cryptography==43.0.3
-python-dotenv==1.0.1
+requests==2.34.2
+cryptography==50.0.2
+python-dotenv==1.2.3
 schedule==1.2.2
-websocket-client
+websocket-client==1.9.2
