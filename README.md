@@ -33,8 +33,8 @@ Every scan cycle, the bot pulls live markets from the Kalshi v2 API, looks for m
                       │                              │
                 ┌─────▼──────────────────────────────▼─────┐
                 │  bot/bot.py  — scan → score → size →      │
-                │  guardrails → execute (or dry-run log)    │   worker on Railway
-                └─────┬───────────────────────────┬─────────┘   (Procfile)
+                │  guardrails → execute (or dry-run log)    │   long-running worker on any
+                └─────┬───────────────────────────┬─────────┘   host (Render, Fly, a VPS…)
                       │                           │
                ┌──────▼──────┐             ┌──────▼───────┐
                │  SQLite     │             │ Daily email  │
