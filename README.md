@@ -12,11 +12,6 @@ I built this end to end with Claude as my pair programmer. The aim was to see ho
 
 This public repo is **V2**: the architecture, strategy set and safeguards described below, kept as a readable reference. Active development continues in a private **V3** that is currently in paper validation against live Kalshi orderbooks (real fills, slippage and fees recorded, no real orders). V3 adds a persisted risk governor (daily / weekly / monthly loss caps, profit lock, drawdown-scaled sizing, per-strategy loss streaks), a regime detector that throttles or pauses strategies when market conditions change, portfolio-aware Kelly sizing, a plain-language activity feed, and a phone-first control dashboard with a kill switch. This repo receives security fixes only. Nothing here is a tuned, profitable configuration, and no live-money results are claimed.
 
-
-## V3 architecture
-
-<p align="center"><img src="assets/apexpm-v3-architecture.png" alt="ApexPM V3 architecture diagram" width="100%"></p>
-
 ---
 
 ## What it does
