@@ -91,6 +91,8 @@ I directed this project with Claude doing most of the implementation. I spec'd t
 
 ## License
 
-MIT
+[PolyForm Noncommercial 1.0.0](LICENSE). You may read, run, study and modify this code for personal, research and other noncommercial purposes. Commercial use — including selling, hosting as a paid service, or using it to trade for a business — is not licensed; contact the owner for commercial terms.
 
-The ApexPM logo in `assets/` is © the project owner and is not covered by the MIT license; ask before reusing it.
+The ApexPM name and the logo in `assets/` are © the project owner and are not covered by the license; ask before reusing them.
+
+Required Notice: Copyright mlb707dev (https://github.com/mlb707dev)
