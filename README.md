@@ -17,7 +17,7 @@ This public repo is **V2**: the architecture, strategy set and safeguards descri
 
 <p align="center"><img src="assets/apexpm-v3-architecture.png" alt="ApexPM V3 architecture: two loops, ordered risk gates, three books, journal, judgement, lifecycle and the Lab" width="100%"></p>
 
-V3 runs every strategy inside a governance harness. Two loops generate trades: a scanner that finds and enters new trades, and a real-time loop that manages exits and reacts to live games. Every order passes ordered risk gates into one of three books (paper, shadow, or a locked live book), and everything is journaled. The journal feeds analytics, nightly and weekly reviews, and lifecycle rules that automatically bench a losing strategy; only a human can reinstate one. The Lab tests strategy variants in the shadow book and turns the evidence into proposals. Nothing changes automatically.
+V3 runs every strategy inside a governance harness. A strategy layer of two loops drives every trade: a scanner that finds and enters new trades, and a real-time loop that manages exits and reacts to live games. Every order passes ordered governance gates into one of three books (paper, shadow, or a locked live book), and everything is journaled. The journal feeds analytics, nightly and weekly reviews, and lifecycle rules that automatically bench a losing strategy; only a human can reinstate one. The Lab tests strategy variants in the shadow book and turns the evidence into proposals. Nothing changes automatically.
 
 It is built spec-first: every strategy and agent starts as a written spec (where the edge comes from, kill criteria, minimum sample) before any code, and every change passes an independent review and the CI test suite before it ships.
 
