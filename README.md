@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo.png" width="160" alt="ApexPM logo"></p>
+
 # ApexPM
 
 **An automated arbitrage scanner and execution bot for Kalshi prediction markets, with a React dashboard for monitoring, journaling and AI-assisted performance reviews.**
@@ -88,3 +90,5 @@ I directed this project with Claude doing most of the implementation. I spec'd t
 ## License
 
 MIT
+
+The ApexPM logo in `assets/` is © the project owner and is not covered by the MIT license; ask before reusing it.
