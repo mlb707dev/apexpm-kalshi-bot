@@ -27,6 +27,8 @@ Every scan cycle, the bot pulls live markets from the Kalshi v2 API, looks for m
 
 ## Architecture
 
+<p align="center"><img src="assets/apexpm-v3-architecture.png" alt="ApexPM V3 architecture diagram" width="100%"></p>
+
 ```
             ┌──────────────────────┐        ┌──────────────────┐
             │   Kalshi API v2      │        │  Polymarket API  │
