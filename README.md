@@ -6,11 +6,11 @@
 
 I built this end to end with Claude as my pair programmer. The aim was to see how far AI-assisted development could take a non-engineer from an idea to a deployed, risk-managed system.
 
-> ⚠️ **Paper trading by default. Not financial advice.** `DRY_RUN=true` and `USE_DEMO=true` are the shipped defaults. The strategy values in this repo are deliberately conservative placeholders, not tuned values.
+> ⚠️ **Paper trading by default. Not financial advice.** `DRY_RUN=true` and `USE_DEMO=true` are the shipped defaults. The strategy values in this repo are placeholders you set yourself in `.env`.
 
 ## Status
 
-This public repo is **V2**: the architecture, strategy set and safeguards described below, kept as a readable reference. Active development continues in a private **V3** that is currently in paper validation against live Kalshi orderbooks (real fills, slippage and fees recorded, no real orders). V3 adds a persisted risk governor (daily / weekly / monthly loss caps, profit lock, drawdown-scaled sizing, per-strategy loss streaks), a regime detector that throttles or pauses strategies when market conditions change, portfolio-aware Kelly sizing, a plain-language activity feed, and a phone-first control dashboard with a kill switch. This repo receives security fixes only. Nothing here is a tuned, profitable configuration, and no live-money results are claimed.
+This public repo is the **reference architecture**: the scanner, the strategy framework, the safeguards and the dashboard, kept readable so the engineering can be judged. The production system (strategies, models, tuning, risk and learning layers) is developed privately and is not published. This repo receives security fixes only.
 
 ---
 
@@ -27,7 +27,7 @@ Every scan cycle, the bot pulls live markets from the Kalshi v2 API, looks for m
 
 ## Architecture
 
-<p align="center"><img src="assets/apexpm-v3-architecture.png" alt="ApexPM V3 architecture diagram" width="100%"></p>
+<p align="center"><img src="assets/apexpm-v3-architecture.png" alt="ApexPM architecture diagram" width="100%"></p>
 
 ```
             ┌──────────────────────┐        ┌──────────────────┐
@@ -85,7 +85,7 @@ Every strategy setting can be overridden from `.env` (see `.env.example`), so yo
 
 ## Built with AI
 
-I directed this project with Claude doing most of the implementation. I spec'd the strategies and guardrails, then reviewed the output and checked it in dry runs. Later iterations came from reading the bot's own logs of rejected opportunities ("missed trades") and asking why. The dashboard's AI review sends a trading period to Claude and returns specific parameter recommendations.
+I directed this project with Claude doing most of the implementation. I spec'd the strategies and guardrails, then reviewed the output and checked it in dry runs. Later iterations came from reading the bot's own logs of rejected opportunities ("missed trades") and asking why. The dashboard's AI review sends a trading period to Claude and returns parameter suggestions for a human to consider.
 
 *(The in-dashboard AI review is built for Claude's artifact runtime. To run it standalone, put a small server-side proxy in front of the API. Never ship an API key to the browser.)*
 
